@@ -1,0 +1,158 @@
+<div class="alerts-container">
+  <!-- Current Critical Alert -->
+  <div id="currentCriticalAlert" class="critical-alert-section">
+    <!-- Will be populated when alerts come in -->
+  </div>
+  
+  <!-- Alert History -->
+  <div class="alert-history">
+    <h3>Alert History</h3>
+    <div id="alertHistoryList" class="history-list">
+      <p class="no-alerts-message">No critical alerts in history</p>
+    </div>
+  </div>
+</div>
+
+<!-- Add this CSS in your <style> section or CSS file -->
+<style>
+.alerts-container {
+  margin: 20px 0;
+}
+
+.critical-alert-section {
+  margin-bottom: 20px;
+}
+
+.alert-history {
+  border-top: 2px solid #e74c3c;
+  padding-top: 15px;
+}
+
+.history-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #f9f9f9;
+}
+
+.alert-item {
+  border-left: 4px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: white;
+  border-radius: 4px;
+}
+
+.alert-item.critical {
+  border-left-color: #e74c3c;
+  background-color: #ffeaea;
+}
+
+.alert-item.resolved {
+  border-left-color: #2ecc71;
+  background-color: #eaffea;
+}
+
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.patient-id {
+  font-weight: bold;
+}
+
+.alert-time {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
+  color: white;
+}
+
+.alert-item.critical .status-badge {
+  background-color: #e74c3c;
+}
+
+.alert-item.resolved .status-badge {
+  background-color: #2ecc71;
+}
+
+.no-alerts-message {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+}
+</style>
+
+<!-- Add this JavaScript before closing </body> tag -->
+<script>
+// Alert history storage and display
+let alertHistory = JSON.parse(localStorage.getItem('ambulanceAlertHistory')) || [];
+
+// Function to display alert history
+function displayAlertHistory() {
+  const historyList = document.getElementById('alertHistoryList');
+  
+  if (alertHistory.length === 0) {
+    historyList.innerHTML = '<p class="no-alerts-message">No critical alerts in history</p>';
+    return;
+  }
+  
+  historyList.innerHTML = alertHistory.map(alert => `
+    <div class="alert-item ${alert.status === 'critical' ? 'critical' : 'resolved'}">
+      <div class="alert-header">
+        <span class="patient-id">Patient: ${alert.patientId}</span>
+        <span class="alert-time">${formatTime(alert.timestamp)}</span>
+      </div>
+      <div class="alert-details">
+        <p><strong>Condition:</strong> ${alert.condition}</p>
+        <p><strong>Location:</strong> ${alert.location}</p>
+        <p><strong>Status:</strong> <span class="status-badge">${alert.status}</span></p>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Function to add a new alert to history
+function addAlertToHistory(patientId, condition, location, status = 'critical') {
+  const newAlert = {
+    patientId,
+    condition,
+    location,
+    status,
+    timestamp: new Date().toISOString()
+  };
+  
+  alertHistory.unshift(newAlert);
+  
+  // Keep only the last 50 alerts
+  if (alertHistory.length > 50) {
+    alertHistory = alertHistory.slice(0, 50);
+  }
+  
+  localStorage.setItem('ambulanceAlertHistory', JSON.stringify(alertHistory));
+  displayAlertHistory();
+}
+
+// Helper function to format timestamp
+function formatTime(timestamp) {
+  const date = new Date(timestamp);
+  return date.toLocaleString();
+}
+
+// Initialize alert history on page load
+document.addEventListener('DOMContentLoaded', function() {
+  displayAlertHistory();
+});
+</script>
